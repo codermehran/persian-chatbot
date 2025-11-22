@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ session }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        .messages { border: 1px solid #ddd; padding: 1rem; max-width: 700px; margin-bottom: 1rem; }
+        .message { margin-bottom: 0.75rem; }
+        .role { font-weight: bold; margin-left: 0.5rem; }
+        .assistant { color: #0a5; }
+        .user { color: #05a; }
+        .system { color: #555; }
+        #status { color: #777; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <h1>{{ session }}</h1>
+    <p><a href="{% url 'chat:index' %}">بازگشت به فهرست گفتگوها</a></p>
+
+    <div class="messages" id="messages">
+        {% for message in messages %}
+            <div class="message">
+                <span class="role {{ message.role }}">{{ message.get_role_display }}:</span>
+                <span class="content">{{ message.content }}</span>
+            </div>
+        {% empty %}
+            <p>پیامی وجود ندارد. اولین پیام را ارسال کنید.</p>
+        {% endfor %}
+    </div>
+
+    <div id="status"></div>
+
+    <form id="chat-form" method="post" action="{% url 'chat:send_message' session.pk %}">
+        {% csrf_token %}
+        <input type="text" name="message" id="message-input" placeholder="پیام خود را بنویسید" required style="width: 400px;">
+        <button type="submit">ارسال</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const messagesBox = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const status = document.getElementById('status');
+
+        function appendMessage(role, content) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('message');
+            const roleSpan = document.createElement('span');
+            roleSpan.classList.add('role', role);
+            roleSpan.textContent = role === 'user' ? 'کاربر:' : role === 'assistant' ? 'دستیار:' : 'سیستم:';
+            const contentSpan = document.createElement('span');
+            contentSpan.classList.add('content');
+            contentSpan.textContent = content;
+            wrapper.appendChild(roleSpan);
+            wrapper.appendChild(contentSpan);
+            messagesBox.appendChild(wrapper);
+        }
+
+        async function streamAssistant(url, formData) {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+
+            if (!response.ok || !response.body) {
+                status.textContent = 'ارسال پیام با مشکل مواجه شد.';
+                return;
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let assistantMessage = '';
+            status.textContent = 'در حال پاسخ...';
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                assistantMessage += chunk;
+                if (!document.getElementById('assistant-current')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('message');
+                    const roleSpan = document.createElement('span');
+                    roleSpan.classList.add('role', 'assistant');
+                    roleSpan.textContent = 'دستیار:';
+                    const contentSpan = document.createElement('span');
+                    contentSpan.classList.add('content');
+                    contentSpan.id = 'assistant-current';
+                    contentSpan.textContent = assistantMessage;
+                    wrapper.appendChild(roleSpan);
+                    wrapper.appendChild(contentSpan);
+                    messagesBox.appendChild(wrapper);
+                } else {
+                    document.getElementById('assistant-current').textContent = assistantMessage;
+                }
+            }
+
+            const current = document.getElementById('assistant-current');
+            if (current) {
+                current.removeAttribute('id');
+            }
+            status.textContent = '';
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            messageInput.value = '';
+
+            const formData = new FormData(form);
+            await streamAssistant(form.action, formData);
+        });
+    </script>
+</body>
+</html>
