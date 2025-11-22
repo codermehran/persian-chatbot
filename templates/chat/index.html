@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>گفتگوها</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        .session-list { list-style: none; padding: 0; }
+        .session-list li { margin: 0.5rem 0; }
+        .actions { margin-bottom: 1rem; }
+        a { text-decoration: none; color: #0a5; }
+    </style>
+</head>
+<body>
+    <h1>گفتگوها</h1>
+    <div class="actions">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit">گفتگوی جدید</button>
+        </form>
+    </div>
+    <ul class="session-list">
+        {% for session in sessions %}
+            <li>
+                <a href="{% url 'chat:chat' session.pk %}">{{ session }}</a>
+            </li>
+        {% empty %}
+            <li>هیچ گفتگویی وجود ندارد.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
