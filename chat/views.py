@@ -25,7 +25,7 @@ def chat_view(request, session_id: int):
     messages = session.messages.all()
     return render(
         request,
-        "chat/session.html",
+        "chat/chat.html",
         {
             "session": session,
             "messages": messages,
