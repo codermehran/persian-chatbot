@@ -55,12 +55,18 @@
     const messagesBox = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
     const statusEl = document.getElementById('status');
+    const submitButton = form.querySelector('button[type="submit"]');
 
     function scrollToBottom() {
         messagesBox.scrollTop = messagesBox.scrollHeight;
     }
 
-    function appendMessage(role, content) {
+    function setStatus(message = '', variant = 'info') {
+        statusEl.textContent = message;
+        statusEl.className = `px-4 pb-4 text-sm ${variant === 'error' ? 'text-red-600' : 'text-slate-500'}`;
+    }
+
+    function appendMessage(role, content, { id = '' } = {}) {
         const wrapper = document.createElement('article');
         wrapper.className = 'flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2';
 
@@ -76,7 +82,10 @@
         roleLabel.textContent = role === 'user' ? 'کاربر' : role === 'assistant' ? 'دستیار' : 'سیستم';
 
         const text = document.createElement('p');
-        text.className = 'leading-7 text-slate-800';
+        text.className = 'leading-7 text-slate-800 whitespace-pre-wrap';
+        if (id) {
+            text.id = id;
+        }
         text.textContent = content;
 
         contentWrapper.appendChild(roleLabel);
@@ -85,69 +94,51 @@
         wrapper.appendChild(contentWrapper);
         messagesBox.appendChild(wrapper);
         scrollToBottom();
+
+        return { wrapper, textElement: text };
     }
 
     async function streamAssistant(url, formData) {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        const { textElement } = appendMessage('assistant', '', { id: 'assistant-stream' });
+        setStatus('در حال پاسخ...');
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            });
+
+            if (!response.ok || !response.body) {
+                throw new Error('ارسال پیام با مشکل مواجه شد.');
             }
-        });
 
-        if (!response.ok || !response.body) {
-            statusEl.textContent = 'ارسال پیام با مشکل مواجه شد.';
-            return;
-        }
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let assistantMessage = '';
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let assistantMessage = '';
-        statusEl.textContent = 'در حال پاسخ...';
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            assistantMessage += chunk;
-            const existing = document.getElementById('assistant-current');
-            if (!existing) {
-                const wrapper = document.createElement('article');
-                wrapper.className = 'flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2';
-
-                const avatar = document.createElement('div');
-                avatar.className = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white';
-                avatar.textContent = 'د';
-
-                const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'space-y-1';
-
-                const roleLabel = document.createElement('div');
-                roleLabel.className = 'text-sm font-semibold text-slate-700';
-                roleLabel.textContent = 'دستیار';
-
-                const text = document.createElement('p');
-                text.className = 'leading-7 text-slate-800';
-                text.id = 'assistant-current';
-                text.textContent = assistantMessage;
-
-                contentWrapper.appendChild(roleLabel);
-                contentWrapper.appendChild(text);
-                wrapper.appendChild(avatar);
-                wrapper.appendChild(contentWrapper);
-                messagesBox.appendChild(wrapper);
-            } else {
-                existing.textContent = assistantMessage;
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                assistantMessage += decoder.decode(value, { stream: true });
+                textElement.textContent = assistantMessage;
+                scrollToBottom();
             }
-            scrollToBottom();
-        }
 
-        const current = document.getElementById('assistant-current');
-        if (current) {
-            current.removeAttribute('id');
+            assistantMessage += decoder.decode();
+            textElement.textContent = assistantMessage;
+            setStatus('');
+        } catch (error) {
+            textElement.textContent = 'دریافت پاسخ با مشکل مواجه شد.';
+            setStatus(error.message || 'ارسال پیام با مشکل مواجه شد.', 'error');
+        } finally {
+            textElement.removeAttribute('id');
+            messageInput.disabled = false;
+            submitButton.disabled = false;
+            messageInput.focus();
         }
-        statusEl.textContent = '';
     }
 
     form.addEventListener('submit', async (event) => {
@@ -156,7 +147,10 @@
         if (!text) return;
 
         appendMessage('user', text);
+        setStatus('');
         messageInput.value = '';
+        messageInput.disabled = true;
+        submitButton.disabled = true;
 
         const formData = new FormData(form);
         await streamAssistant(form.action, formData);
