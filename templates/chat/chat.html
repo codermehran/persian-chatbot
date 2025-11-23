@@ -1,53 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}{{ session }} | دستیار گفتگو{% endblock %}
+{% block title %}{{ session }} | دستیار هوشمند{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-4xl px-4 py-8 space-y-6">
-    <header class="flex flex-wrap items-center justify-between gap-3">
+<!-- Chat Header -->
+<header class="shrink-0 glass-panel border-b border-slate-200/60 px-4 py-3 flex items-center justify-between z-10 shadow-sm">
+    <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-primary-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.159 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+        </div>
         <div>
-            <p class="text-sm text-slate-500">شناسه جلسه: {{ session.pk }}</p>
-            <h1 class="text-2xl font-bold text-slate-900">{{ session }}</h1>
+            <h1 class="font-bold text-slate-800 text-lg leading-tight">{{ session }}</h1>
+            <p class="text-xs text-slate-500">آنلاین</p>
         </div>
-        <a href="{% url 'chat:index' %}" class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900">بازگشت به گفتگوها</a>
-    </header>
+    </div>
+    <a href="{% url 'chat:index' %}" class="text-slate-500 hover:text-slate-800 hover:bg-slate-100 p-2 rounded-full transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+    </a>
+</header>
 
-    <section class="space-y-3">
-        <div class="rounded-2xl border border-slate-200 bg-white/70 shadow-sm backdrop-blur">
-            <div id="messages" class="h-[65vh] max-h-[70vh] overflow-y-auto p-4 space-y-4">
-                {% for message in messages %}
-                    <article class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-                            {{ message.get_role_display|slice:":1" }}
-                        </div>
-                        <div class="space-y-1">
-                            <div class="text-sm font-semibold text-slate-700">{{ message.get_role_display }}</div>
-                            <p class="leading-7 text-slate-800">{{ message.content }}</p>
-                        </div>
-                    </article>
-                {% empty %}
-                    <div class="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-500">
-                        اولین پیام خود را ارسال کنید.
+<!-- Messages Area -->
+<div id="messages" class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth">
+    {% for message in messages %}
+        <article class="flex w-full {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}">
+            <div class="flex gap-3 max-w-[85%] md:max-w-[75%] {% if message.role == 'user' %}flex-row-reverse{% endif %}">
+                <!-- Avatar -->
+                <div class="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm
+                    {% if message.role == 'user' %}bg-primary-600 text-white{% else %}bg-white text-slate-700 border border-slate-200{% endif %}">
+                    {{ message.get_role_display|slice:":1" }}
+                </div>
+
+                <!-- Bubble -->
+                <div class="space-y-1">
+                    <div class="px-4 py-2.5 shadow-sm text-sm leading-7
+                        {% if message.role == 'user' %}
+                            bg-primary-600 text-white rounded-2xl rounded-tr-none
+                        {% else %}
+                            bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-tl-none
+                        {% endif %}">
+                        {{ message.content|linebreaksbr }}
                     </div>
-                {% endfor %}
+                    <!-- Timestamp/Meta (Optional) -->
+                    <!-- <div class="text-[10px] text-slate-400 px-1 {% if message.role == 'user' %}text-left{% else %}text-right{% endif %}">Just now</div> -->
+                </div>
             </div>
-            <p id="status" class="px-4 pb-4 text-sm text-slate-500"></p>
+        </article>
+    {% empty %}
+        <div class="flex flex-col items-center justify-center h-full text-slate-400 space-y-4 mt-10">
+            <div class="h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-slate-300">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+            </div>
+            <p>گفتگو را آغاز کنید...</p>
         </div>
-    </section>
+    {% endfor %}
+</div>
 
-    <section class="rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur">
-        <form id="chat-form" method="post" action="{% url 'chat:send_message' session.pk %}" class="space-y-4">
-            {% csrf_token %}
-            <div class="space-y-2">
-                <label for="message-input" class="text-sm font-semibold text-slate-700">پیام جدید</label>
-                <textarea id="message-input" name="message" rows="3" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400" placeholder="پیام خود را بنویسید"></textarea>
-            </div>
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-xs text-slate-500">پاسخ دستیار به صورت زنده در بالا نمایش داده می‌شود.</p>
-                <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600">ارسال پیام</button>
-            </div>
-        </form>
-    </section>
+<!-- Input Area -->
+<div class="shrink-0 p-4 glass-panel border-t border-slate-200/60">
+    <form id="chat-form" method="post" action="{% url 'chat:send_message' session.pk %}" class="max-w-4xl mx-auto relative flex items-end gap-2">
+        {% csrf_token %}
+
+        <div class="relative flex-1">
+            <textarea id="message-input" name="message" rows="1" required
+                class="w-full rounded-2xl border-0 bg-white py-3 pr-4 pl-10 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 resize-none overflow-hidden min-h-[48px] max-h-[120px]"
+                placeholder="پیام خود را بنویسید..."></textarea>
+        </div>
+
+        <button type="submit" class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 -rotate-90">
+                <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+            </svg>
+        </button>
+    </form>
+    <div class="text-center mt-2">
+        <p id="status" class="text-xs text-slate-400 h-4 transition-all duration-300 opacity-0"></p>
+    </div>
 </div>
 
 <script>
@@ -57,45 +90,64 @@
     const statusEl = document.getElementById('status');
     const submitButton = form.querySelector('button[type="submit"]');
 
+    // Auto-resize textarea
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        if (this.value === '') {
+             this.style.height = '48px';
+        }
+    });
+
     function scrollToBottom() {
-        messagesBox.scrollTop = messagesBox.scrollHeight;
+        messagesBox.scrollTo({ top: messagesBox.scrollHeight, behavior: 'smooth' });
     }
 
     function setStatus(message = '', variant = 'info') {
         statusEl.textContent = message;
-        statusEl.className = `px-4 pb-4 text-sm ${variant === 'error' ? 'text-red-600' : 'text-slate-500'}`;
+        statusEl.className = `text-xs h-4 transition-all duration-300 ${variant === 'error' ? 'text-red-500' : 'text-slate-400'} ${message ? 'opacity-100' : 'opacity-0'}`;
     }
 
     function appendMessage(role, content, { id = '' } = {}) {
-        const wrapper = document.createElement('article');
-        wrapper.className = 'flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2';
+        // Container
+        const article = document.createElement('article');
+        article.className = `flex w-full ${role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`;
 
+        // Inner Flex
+        const innerDiv = document.createElement('div');
+        innerDiv.className = `flex gap-3 max-w-[85%] md:max-w-[75%] ${role === 'user' ? 'flex-row-reverse' : ''}`;
+
+        // Avatar
         const avatar = document.createElement('div');
-        avatar.className = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white';
+        avatar.className = `shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${role === 'user' ? 'bg-primary-600 text-white' : 'bg-white text-slate-700 border border-slate-200'}`;
         avatar.textContent = role === 'user' ? 'ک' : role === 'assistant' ? 'د' : 'س';
 
+        // Content Wrapper
         const contentWrapper = document.createElement('div');
         contentWrapper.className = 'space-y-1';
 
-        const roleLabel = document.createElement('div');
-        roleLabel.className = 'text-sm font-semibold text-slate-700';
-        roleLabel.textContent = role === 'user' ? 'کاربر' : role === 'assistant' ? 'دستیار' : 'سیستم';
+        // Bubble
+        const bubble = document.createElement('div');
+        bubble.className = `px-4 py-2.5 shadow-sm text-sm leading-7 ${role === 'user' ? 'bg-primary-600 text-white rounded-2xl rounded-tr-none' : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-tl-none'}`;
 
-        const text = document.createElement('p');
-        text.className = 'leading-7 text-slate-800 whitespace-pre-wrap';
+        const text = document.createElement('div'); // Div to allow line breaks via CSS/HTML
+        text.style.whiteSpace = 'pre-wrap';
         if (id) {
             text.id = id;
         }
         text.textContent = content;
 
-        contentWrapper.appendChild(roleLabel);
-        contentWrapper.appendChild(text);
-        wrapper.appendChild(avatar);
-        wrapper.appendChild(contentWrapper);
-        messagesBox.appendChild(wrapper);
+        bubble.appendChild(text);
+        contentWrapper.appendChild(bubble);
+
+        innerDiv.appendChild(avatar);
+        innerDiv.appendChild(contentWrapper);
+        article.appendChild(innerDiv);
+        messagesBox.appendChild(article);
+
         scrollToBottom();
 
-        return { wrapper, textElement: text };
+        return { wrapper: article, textElement: text };
     }
 
     async function streamAssistant(url, formData) {
@@ -138,6 +190,7 @@
             messageInput.disabled = false;
             submitButton.disabled = false;
             messageInput.focus();
+            messageInput.style.height = '48px'; // Reset height
         }
     }
 
@@ -149,6 +202,7 @@
         appendMessage('user', text);
         setStatus('');
         messageInput.value = '';
+        messageInput.style.height = '48px';
         messageInput.disabled = true;
         submitButton.disabled = true;
 
@@ -156,6 +210,24 @@
         await streamAssistant(form.action, formData);
     });
 
+    // Enter to send (Shift+Enter for new line)
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
     scrollToBottom();
 </script>
+
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.3s ease-out forwards;
+    }
+</style>
 {% endblock %}
