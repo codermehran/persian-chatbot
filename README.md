@@ -26,6 +26,10 @@ Create a `.env` file (see the sample instructions below) with the following vari
 | `OPENAI_API_BASE` | Custom base URL for OpenAI-compatible endpoints (leave blank for default). |
 | `OPENAI_MODEL` | Model name to use for chat completions. |
 | `RAG_ENABLED` | `true`/`false` flag to enable or disable retrieval-augmented generation. |
+| `TAVILY_ENABLED` | `true`/`false` flag to enrich answers with Tavily web search when needed. |
+| `TAVILY_API_KEY` | API key for Tavily Search (required when `TAVILY_ENABLED=true`). |
+| `TAVILY_SEARCH_DEPTH` | Tavily search depth (`basic` or `advanced`). |
+| `TAVILY_MAX_RESULTS` | Maximum number of Tavily results to include (default `3`). |
 | `DB_ENGINE` | Django database engine (e.g., `django.db.backends.sqlite3`). |
 | `DB_NAME` | Database name or path (e.g., `db.sqlite3`). |
 | `DB_USER` | Database username (if applicable). |
@@ -54,6 +58,7 @@ python manage.py runserver
 - Chat requests are handled through the main chatbot view, which can stream token-by-token responses when using the streaming endpoint.
 - The streaming endpoint yields incremental tokens until the model response completes, providing a live typing effect in the UI.
 - RAG can be toggled with the `RAG_ENABLED` environment variable; when enabled, the system augments prompts with retrieved context before querying the model.
+- When `TAVILY_ENABLED=true`, the assistant also fetches fresh snippets from Tavily Search for each user prompt to ground answers in up-to-date web results.
 
 ## Frontend Assets and Templates
 - Tailwind is loaded via CDN for quick styling in development; static assets resolve through Django's static paths when collected.
