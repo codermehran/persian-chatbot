@@ -38,6 +38,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 RAG_ENABLED = os.getenv("RAG_ENABLED", "False") == "True"
+TAVILY_ENABLED = os.getenv("TAVILY_ENABLED", "False") == "True"
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+TAVILY_SEARCH_DEPTH = os.getenv("TAVILY_SEARCH_DEPTH", "basic")
+TAVILY_MAX_RESULTS = int(os.getenv("TAVILY_MAX_RESULTS", "3"))
 
 
 # Application definition
