@@ -9,7 +9,7 @@ class Command(BaseCommand):
     SAMPLE_DOCS = [
         {
             "source": "getting_started",
-            "text": "Welcome to the chatbot! This document explains basic usage and greetings.",
+            "text": "Welcome to Soapify! This document explains basic usage and greetings.",
         },
         {
             "source": "faqs",
