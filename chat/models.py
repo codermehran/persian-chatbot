@@ -2,7 +2,7 @@ from django.db import models
 
 
 class ChatSession(models.Model):
-    """Represents a conversation session between the user and the chatbot."""
+    """Represents a conversation session between the user and the Soapify assistant."""
 
     title = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,7 +1,7 @@
-# Persian Chatbot
+# Soapify
 
 ## Project Overview
-A Django-based Persian-language chatbot that integrates OpenAI models with optional retrieval-augmented generation (RAG). The app provides a chat interface, supports streaming responses, and can optionally enrich prompts using vector search.
+A Django-based Persian-language assistant branded as Soapify that integrates OpenAI models with optional retrieval-augmented generation (RAG). The app provides a chat interface, supports streaming responses, and can optionally enrich prompts using vector search.
 
 ## Prerequisites
 - Python 3.11+
@@ -55,10 +55,14 @@ python manage.py runserver
 ```
 
 ## Chat Flow and API Behavior
-- Chat requests are handled through the main chatbot view, which can stream token-by-token responses when using the streaming endpoint.
+- Chat requests are handled through the main Soapify assistant view, which can stream token-by-token responses when using the streaming endpoint.
 - The streaming endpoint yields incremental tokens until the model response completes, providing a live typing effect in the UI.
 - RAG can be toggled with the `RAG_ENABLED` environment variable; when enabled, the system augments prompts with retrieved context before querying the model.
 - When `TAVILY_ENABLED=true`, the assistant also fetches fresh snippets from Tavily Search for each user prompt to ground answers in up-to-date web results.
+
+## Project Policies
+- Soapify is distributed for internal use; please do not redistribute or modify the licensing terms without prior approval.
+- External contributions are not being accepted at this time.
 
 ## Frontend Assets and Templates
 - Tailwind is loaded via CDN for quick styling in development; static assets resolve through Django's static paths when collected.

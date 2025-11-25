@@ -3,12 +3,12 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "persian-chatbot"
+name = "soapify"
 version = "0.1.0"
-description = "Persian chatbot built with Django"
+description = "Soapify Persian-language assistant built with Django"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{name = "Persian Chatbot Team"}]
+authors = [{name = "Soapify Team"}]
 dependencies = [
     "Django>=5.2,<6.0",
     "python-dotenv>=1.0",
